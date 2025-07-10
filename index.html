@@ -553,7 +553,7 @@
         // تحميل المنتجات من Firebase Realtime Database
         async function loadProducts() {
             try {
-                const snapshot = await database.ref("product").once("value");
+                const snapshot = await database.ref("products").once("value");
                 const productsData = snapshot.val();
 
                 productsContainer.innerHTML = "";
