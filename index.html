@@ -1175,7 +1175,7 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-xl font-bold">تفاصيل طلب التواصل</h3>
                 <button onclick="closeContactDetails()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
             <div id="contactDetailsContent" class="space-y-4">
@@ -1375,6 +1375,7 @@
                     notificationElement.className = `p-4 rounded-lg border-r-4 cursor-pointer transition-all hover:shadow-md ${
                         notification.read ? 'bg-gray-50 border-gray-300' : 'bg-white border-purple-500 shadow-sm'
                     }`;
+                    notificationElement.setAttribute('data-notification-id', notification.id);
                     
                     notificationElement.innerHTML = `
                         <div class="flex items-start">
@@ -1399,7 +1400,8 @@
                         </div>
                     `;
                     if (notification.action) {
-                        notificationElement.addEventListener('click', () => {
+                        notificationElement.addEventListener('click', (e) => {
+                            if (e.target.closest('button')) return;
                             closeNotifications();
                             notification.action();
                         });
@@ -1722,6 +1724,66 @@
                 
                 products.forEach(product => {
                     // نفس الكود الموجود في updateProductsTable
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <img src="${product.image}" alt="${sanitizeHTML(product.name)}" 
+                                     class="w-12 h-12 object-cover rounded-lg ml-3 shadow-sm"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 48 48\'%3E%3Crect width=\'48\' height=\'48\' fill=\'%23f3f4f6\'/%3E%3Ctext x=\'24\' y=\'24\' text-anchor=\'middle\' fill=\'%23666\' font-size=\'12\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                <div>
+                                    <div class="font-medium text-gray-900">${sanitizeHTML(product.name)}</div>
+                                    <div class="text-sm text-gray-500">${sanitizeHTML(product.description) || 'لا يوجد وصف'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                ${this.getCategoryName(product.category)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-900">${product.price} جنيه</div>
+                            <div class="text-sm text-gray-500">السعر</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <span class="font-semibold ${product.stock <= 5 ? 'text-red-600' : 'text-green-600'}">
+                                    ${product.stock}
+                                </span>
+                                <span class="text-sm text-gray-500 mr-1">قطعة</span>
+                                ${product.stock <= 5 ? '<i class="fas fa-exclamation-triangle text-red-500 mr-2" title="مخزون منخفض"></i>' : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                ${generateStars(Math.floor(product.rating))}
+                                <span class="text-sm text-gray-500 mr-2">(${product.rating || 0})</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <button onclick="editProduct('${product.id}')" 
+                                        class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                                        title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="duplicateProduct('${product.id}')" 
+                                        class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                        title="نسخ">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button onclick="productManager.deleteProduct('${product.id}')" 
+                                        class="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                                        title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
                 });
             }
             
@@ -1987,6 +2049,57 @@
                 
                 orders.forEach(order => {
                     // نفس الكود الموجود في updateOrdersTable
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 transition-colors';
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900">#${order.orderNumber || order.id}</div>
+                            <div class="text-sm text-gray-500">${order.date}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <img src="${order.product?.image || 'https://via.placeholder.com/40'}" 
+                                     alt="${sanitizeHTML(order.product?.name)}" 
+                                     class="w-10 h-10 object-cover rounded-lg ml-3">
+                                <div>
+                                    <div class="font-medium">${sanitizeHTML(order.customer)}</div>
+                                    <div class="text-sm text-gray-500">${order.phone}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-gray-900">${order.total} جنيه</div>
+                            <div class="text-sm text-gray-500">${order.paymentMethod === 'cash' ? 'نقدي' : 'تحويل بنكي'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded-full status-${order.status}">
+                                ${getStatusText(order.status)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <button onclick="showOrderDetails('${order.id}')" 
+                                        class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                                        title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="printOrder('${order.id}')" 
+                                        class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition-colors"
+                                        title="طباعة">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <select onchange="orderManager.updateOrderStatus('${order.id}', this.value)" 
+                                        class="text-sm border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+                                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>قيد المعالجة</option>
+                                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>مكتمل</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>ملغي</option>
+                                </select>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
                 });
             }
             
@@ -3086,14 +3199,14 @@
                     </div>
                     <div class="flex justify-between items-center mb-3">
                         <span class="text-2xl font-bold text-purple-600">${product.price} جنيه</span>
-                        <button onclick="orderProduct(${product.id})" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        <button onclick="orderProduct('${product.id}')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
                             <i class="fas fa-shopping-bag ml-1"></i>
                             اطلب الآن
                         </button>
                     </div>
                     <div class="flex justify-between items-center">
                         <p class="text-sm text-gray-500">متوفر: ${product.stock} قطعة</p>
-                        <button onclick="showProductDetails(${product.id})" class="text-purple-600 hover:text-purple-800 text-sm">
+                        <button onclick="showProductDetails('${product.id}')" class="text-purple-600 hover:text-purple-800 text-sm">
                             عرض التفاصيل
                         </button>
                     </div>
@@ -3994,10 +4107,10 @@
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <button onclick="showContactDetails(${request.id})" class="text-blue-600 hover:text-blue-800 ml-3">
+                        <button onclick="showContactDetails('${request.id}')" class="text-blue-600 hover:text-blue-800 ml-3">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <select onchange="updateContactStatus(${request.id}, this.value)" class="text-sm border rounded px-2 py-1">
+                        <select onchange="updateContactStatus('${request.id}', this.value)" class="text-sm border rounded px-2 py-1">
                             <option value="new" ${request.status === 'new' ? 'selected' : ''}>جديد</option>
                             <option value="contacted" ${request.status === 'contacted' ? 'selected' : ''}>تم التواصل</option>
                             <option value="in-progress" ${request.status === 'in-progress' ? 'selected' : ''}>قيد المعالجة</option>
@@ -4579,30 +4692,36 @@
             
             const allNotifications = [
                 ...orders.filter(order => order.status === 'pending').map(order => ({
+                    id: `order-${order.id}`,
                     type: 'order',
                     title: `طلب جديد من ${order.customer}`,
                     message: `طلب ${order.product.name} بقيمة ${order.total} جنيه`,
                     time: order.time,
                     date: order.date,
                     timestamp: order.timestamp,
+                    read: false,
                     action: () => showAdminSection('orders')
                 })),
                 ...systemRequests.filter(req => req.status === 'pending').map(req => ({
+                    id: `system-${req.id}`,
                     type: 'system',
                     title: `طلب نظام جديد من ${req.companyName}`,
                     message: `طلب ${getSystemTypeText(req.systemType)}`,
                     time: req.time || 'غير محدد',
                     date: req.date,
                     timestamp: req.timestamp,
+                    read: false,
                     action: () => showAdminSection('systems')
                 })),
                 ...contactRequests.filter(req => req.status === 'new').map(req => ({
+                    id: `contact-${req.id}`,
                     type: 'contact',
                     title: `طلب تواصل جديد من ${req.name}`,
                     message: `${getContactTypeText(req.type)}`,
                     time: req.time,
                     date: req.date,
                     timestamp: req.timestamp,
+                    read: false,
                     action: () => showAdminSection('contacts')
                 }))
             ];
@@ -4616,7 +4735,10 @@
             
             allNotifications.forEach(notification => {
                 const notificationElement = document.createElement('div');
-                notificationElement.className = 'p-4 bg-gray-50 rounded-lg border-r-4 border-purple-500 cursor-pointer hover:bg-gray-100 transition-colors';
+                notificationElement.className = `p-4 bg-gray-50 rounded-lg border-r-4 cursor-pointer hover:bg-gray-100 transition-colors ${
+                    notification.read ? 'border-gray-300' : 'border-purple-500'
+                }`;
+                notificationElement.setAttribute('data-notification-id', notification.id);
                 
                 const iconClass = {
                     'order': 'fas fa-shopping-bag text-green-600',
@@ -4630,18 +4752,27 @@
                             <i class="${iconClass[notification.type]}"></i>
                         </div>
                         <div class="flex-1">
-                            <h5 class="font-semibold text-gray-900">${sanitizeHTML(notification.title)}</h5>
+                            <h5 class="font-semibold text-gray-900 ${notification.read ? '' : 'text-purple-600'}">${sanitizeHTML(notification.title)}</h5>
                             <p class="text-sm text-gray-600 mt-1">${sanitizeHTML(notification.message)}</p>
                             <p class="text-xs text-gray-500 mt-2">${notification.date} - ${notification.time}</p>
                         </div>
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-chevron-left text-gray-400"></i>
+                        <div class="flex-shrink-0 flex items-center space-x-2 space-x-reverse">
+                            ${!notification.read ? `
+                                <button onclick="markAsRead('${notification.id}')" class="text-purple-600 hover:text-purple-800 text-sm">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteNotification('${notification.id}')" class="text-red-600 hover:text-red-800 text-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 `;
                 
                 if (notification.action) {
-                    notificationElement.addEventListener('click', () => {
+                    notificationElement.addEventListener('click', (e) => {
+                        // إذا كان النقر على زر، لا تنفذ الإجراء
+                        if (e.target.closest('button')) return;
                         closeNotifications();
                         notification.action();
                     });
@@ -4652,11 +4783,45 @@
         }
         
         function markAsRead(notificationId) {
-            database.ref(`notifications/${notificationId}`).update({ read: true });
+            database.ref(`notifications/${notificationId}`).update({ read: true }).then(() => {
+                // تحديث الواجهة فوراً
+                const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (notificationElement) {
+                    notificationElement.classList.remove('border-purple-500');
+                    notificationElement.classList.add('border-gray-300');
+                    notificationElement.querySelector('.text-purple-600').classList.remove('text-purple-600');
+                    const checkButton = notificationElement.querySelector('.fa-check');
+                    if (checkButton) {
+                        checkButton.parentElement.remove();
+                    }
+                }
+                
+                // تحديث عدد الإشعارات غير المقروءة
+                notificationSystem.updateNotificationCount();
+                
+                showNotification('تم تحديد الإشعار كمقروء');
+            }).catch(error => {
+                console.error('Error marking notification as read:', error);
+                showNotification('حدث خطأ في تحديث الإشعار', 'error');
+            });
         }
         
         function deleteNotification(notificationId) {
-            database.ref(`notifications/${notificationId}`).remove();
+            database.ref(`notifications/${notificationId}`).remove().then(() => {
+                // تحديث الواجهة فوراً
+                const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                if (notificationElement) {
+                    notificationElement.remove();
+                }
+                
+                // تحديث عدد الإشعارات غير المقروءة
+                notificationSystem.updateNotificationCount();
+                
+                showNotification('تم حذف الإشعار');
+            }).catch(error => {
+                console.error('Error deleting notification:', error);
+                showNotification('حدث خطأ في حذف الإشعار', 'error');
+            });
         }
         
         function markAllAsRead() {
@@ -4668,6 +4833,10 @@
             Promise.all(promises).then(() => {
                 showNotification('تم تحديد جميع الإشعارات كمقروءة');
                 closeNotifications();
+                loadAdminNotifications(); // إعادة تحميل الإشعارات لتحديث الواجهة
+            }).catch(error => {
+                console.error('Error marking all notifications as read:', error);
+                showNotification('حدث خطأ في تحديث الإشعارات', 'error');
             });
         }
         
