@@ -1430,63 +1430,8 @@
                             id: key,
                             ...data[key]
                         }));
-                    } else {
-                        this.initializeDefaultProducts();
                     }
                     this.updateProductsUI();
-                });
-            }
-            
-            initializeDefaultProducts() {
-                const defaultProducts = [
-                    {
-                        name: "حاسوب محمول Dell XPS 15",
-                        category: "computers",
-                        price: 25000,
-                        stock: 10,
-                        description: "حاسوب محمول عالي الأداء مع معالج Intel Core i7",
-                        image: "https://picsum.photos/seed/laptop1/400/300.jpg",
-                        rating: 4.5,
-                        reviews: []
-                    },
-                    {
-                        name: "هاتف iPhone 13",
-                        category: "phones",
-                        price: 18000,
-                        stock: 15,
-                        description: "هاتف iPhone 13 بشاشة Super Retina XDR",
-                        image: "https://picsum.photos/seed/iphone13/400/300.jpg",
-                        rating: 4.8,
-                        reviews: []
-                    },
-                    {
-                        name: "سماعات AirPods Pro",
-                        category: "accessories",
-                        price: 2500,
-                        stock: 25,
-                        description: "سماعات لاسلكية مع إلغاء الضوضاء النشط",
-                        image: "https://picsum.photos/seed/airpods/400/300.jpg",
-                        rating: 4.3,
-                        reviews: []
-                    },
-                    {
-                        name: "طابع دفع الكتروني",
-                        category: "stamps",
-                        price: 800,
-                        stock: 30,
-                        description: "طابع دفع الكتروني للمتاجر والمطاعم",
-                        image: "https://picsum.photos/seed/stamp1/400/300.jpg",
-                        rating: 4.0,
-                        reviews: []
-                    }
-                ];
-                
-                defaultProducts.forEach(product => {
-                    database.ref('products').push({
-                        ...product,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    });
                 });
             }
             
@@ -5048,11 +4993,6 @@
                 notification.remove();
             }, 3000);
         }
-        
-        // إزالة التحديث التلقائي واستخدام Firebase Realtime Database
-        // تم إزالة هذا الكود لأننا نستخدم مستمعي Firebase الآن
     </script>
 </body>
 </html>
-
-
